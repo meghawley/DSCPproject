@@ -1,14 +1,13 @@
 # Run parallel jobs to sum each of the several data.txt.* partial files.
 
 universe = vanilla
-#proc=for i in aa ab ac ad ae; do echo $i; done
 
 executable = ./format.sh
 arguments = $(file)
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = shakespeare/file.$(file)
+transfer_input_files = shakespeare/$(file)
 
 request_cpus = 1
 request_memory = 1GB
