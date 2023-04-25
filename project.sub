@@ -1,0 +1,18 @@
+universe = vanilla
+log    =    log/myscript-chtc_$(Cluster)_$(Process).log
+error  =  error/myscript-chtc_$(Cluster)_$(Process).err
+output = output/myscript-chtc_$(Cluster)_$(Process).out
+
+executable = ./readData.sh
+
+#arguments = 
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files =  http://proxy.chtc.wisc.edu/SQUID/chtc/el8/R413.tar.gz, /home/groups/STAT_DSCP/project8/data/$(file)
+
+request_cpus = 1
+request_memory = 2GB
+request_disk = 150MB
+
+queue file from filelist
