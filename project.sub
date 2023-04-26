@@ -3,7 +3,7 @@ log    =    log/myscript-chtc_$(Cluster)_$(Process).log
 error  =  error/myscript-chtc_$(Cluster)_$(Process).err
 output = output/myscript-chtc_$(Cluster)_$(Process).out
 
-executable = ./readData.sh
+executable = ./jobs.sh
 
 #arguments = 
 
