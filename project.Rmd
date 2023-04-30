@@ -1,0 +1,402 @@
+---
+title: "Stat 405: Election data"
+author: "Sonya Melendez, Megan Hawley, and Mary Wooding"
+date: "2023-04-28"
+output: html_document
+runtime: shiny
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(shiny)
+
+```
+
+```{r, include=FALSE}
+
+wi_2016 <- read_csv("wi_elections/20161108__wi__general__ward.csv")
+wi_2012_general <- read_csv("wi_elections/20121106__wi__general__ward.csv")
+wi_2012_gov <- read_csv("wi_elections/20120605__wi__general-recall__ward.csv")
+wi_2012 <- bind_rows(wi_2012_general, wi_2012_gov)
+rownames(wi_2012) <- NULL
+wi_2008 <- read_csv("wi_elections/20081104__wi__general__ward.csv")
+wi_2004 <- read_csv("wi_elections/2004_wi_pres.csv")
+wi_2000 <- read_csv("wi_elections/2000_wi_pres.csv")
+
+```
+
+
+
+```{r, include=FALSE}
+
+wi_2000_summarized <- wi_2000 %>%
+  filter(!str_detect(candidate, "\\(Write\\-In\\)|\\(Wr\\-In\\)")) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+
+wi_2004_summarized <- wi_2004 %>%
+  filter(!str_detect(candidate, "\\(Write\\-In\\)|\\(Wr\\-In\\)")) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+  
+
+wi_2008_summarized <- wi_2008 %>%
+  filter(!str_detect(candidate, "\\(Write\\-In\\)|\\(Wr\\-In\\)")) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes))%>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+wi_2012_summarized <- wi_2012 %>%
+  filter(!str_detect(candidate, "\\(Write\\-In\\)|\\(Wr\\-In\\)")) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes))%>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+wi_2016_summarized <- wi_2016 %>%
+  filter(!str_detect(candidate, "\\(Write\\-In\\)|\\(Wr\\-In\\)")) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes))%>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+wi_2000_summarized$year <- 2000
+wi_2004_summarized$year <- 2004
+wi_2008_summarized$year <- 2008
+wi_2012_summarized$year <- 2012
+wi_2016_summarized$year <- 2016
+
+wi_elec <- bind_rows(wi_2000_summarized,
+                       wi_2004_summarized, 
+                       wi_2008_summarized, 
+                       wi_2012_summarized, 
+                       wi_2016_summarized)
+
+```
+
+```{r, include=FALSE}
+ga_2016 <- read_csv("ga_elections/20161108__ga__general.csv")
+ga_2012 <- read_csv("ga_elections/20121106__ga__general.csv")
+ga_2008 <- read_csv("ga_elections/20081104__ga__general.csv")
+ga_2004 <- read_csv("ga_elections/20041102__ga__general.csv")
+ga_2000 <- read_csv("ga_elections/20001107__ga__general.csv")
+```
+
+```{r, include=FALSE}
+
+ga_2000_summarized <- ga_2000 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Representative", "House", office)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+
+ga_2004_summarized <- ga_2004 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Representative", "House", office)) %>%
+  mutate(office = ifelse(office == "US Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "US House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+  
+
+ga_2008_summarized <- ga_2008 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Representative", "House", office)) %>%
+  mutate(office = ifelse(office == "US Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))  
+
+ga_2012_summarized <- ga_2012 %>%
+  mutate(party = ifelse(party == "D", "DEM", party)) %>%
+  mutate(party = ifelse(party == "R", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Representative", "House", office)) %>%
+  mutate(office = ifelse(office == "President of the United States", "President", office)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  mutate(total_votes = absentee + election_day + early_voting + provisional) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))  
+
+ga_2016_summarized <- ga_2016 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "(REP", "REP", party)) %>%
+  mutate(office = ifelse(office == "President of the United States", "President", office)) %>%
+  mutate(office = ifelse(office == "U.S. Representative", "House", office)) %>%
+  mutate(office = ifelse(office == "United States Senator", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  mutate(total_votes = absentee + election_day + early_voting + provisional) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+ga_2000_summarized$year <- 2000
+ga_2004_summarized$year <- 2004
+ga_2008_summarized$year <- 2008
+ga_2012_summarized$year <- 2012
+ga_2016_summarized$year <- 2016
+
+ga_elec <- bind_rows(ga_2000_summarized,
+                       ga_2004_summarized, 
+                       ga_2008_summarized, 
+                       ga_2012_summarized, 
+                       ga_2016_summarized)
+
+```
+
+```{r, include=FALSE}
+pa_2016 <- read_csv("pa_elections/20161108__pa__general_county.csv")
+pa_2012 <- read_csv("pa_elections/20121102__pa__general__county.csv")
+pa_2008 <- read_csv("pa_elections/20081104__pa__general__county.csv")
+pa_2004 <- read_csv("pa_elections/20041102__pa__general__county.csv")
+pa_2000 <- read_csv("pa_elections/20001107__pa__general__county.csv")
+```
+
+```{r, include=FALSE}
+
+pa_2000_summarized <- pa_2000 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+
+pa_2004_summarized <- pa_2004 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))  
+  
+
+pa_2008_summarized <- pa_2008 %>%
+ mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))   
+
+pa_2012_summarized <- pa_2012 %>%
+ mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))   
+
+pa_2016_summarized <- pa_2016 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))  
+
+pa_2000_summarized$year <- 2000
+pa_2004_summarized$year <- 2004
+pa_2008_summarized$year <- 2008
+pa_2012_summarized$year <- 2012
+pa_2016_summarized$year <- 2016
+
+pa_elec <- bind_rows(pa_2000_summarized,
+                       pa_2004_summarized, 
+                       pa_2008_summarized, 
+                       pa_2012_summarized, 
+                       pa_2016_summarized)
+
+```
+
+
+```{r, include=FALSE}
+az_2012 <- read_csv("az_elections/20121106__az__general.csv")
+az_2008 <- read_csv("az_elections/20081104__az__general.csv")
+az_2004 <- read_csv("az_elections/20041102__az__general.csv")
+az_2000 <- read_csv("az_elections/20001107__az__general.csv")
+```
+
+```{r, include=FALSE}
+
+az_2000_summarized <- az_2000 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes)) 
+
+
+az_2004_summarized <- az_2004 %>%
+  mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))  
+  
+
+az_2008_summarized <- az_2008 %>%
+ mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))   
+
+az_2012_summarized <- az_2012 %>%
+ mutate(party = ifelse(party == "Democrat", "DEM", party)) %>%
+  mutate(party = ifelse(party == "Republican", "REP", party)) %>%
+  mutate(office = ifelse(office == "U.S. Senate", "Senate", office)) %>%
+  mutate(office = ifelse(office == "U.S. House", "House", office)) %>%
+  filter(party %in% c("DEM", "REP")) %>%
+  filter(office %in% c("President", "Senate", "House")) %>%
+  group_by(office,candidate, party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  group_by(office) %>%
+  mutate(total_office_votes = sum(total_votes))   
+
+az_2000_summarized$year <- 2000
+az_2004_summarized$year <- 2004
+az_2008_summarized$year <- 2008
+az_2012_summarized$year <- 2012
+
+az_elec <- bind_rows(az_2000_summarized,
+                       az_2004_summarized, 
+                       az_2008_summarized, 
+                       az_2012_summarized)
+
+```
+
+```{r, include=FALSE}
+az_elec$state = "Arizona"
+pa_elec$state = "Pennsylvania"
+ga_elec$state = "Georgia"
+wi_elec$state = "Wisconsin"
+
+swing_elec = bind_rows(az_elec, pa_elec, ga_elec, wi_elec)
+```
+
+
+
+```{r}
+
+ui <- fluidPage(
+  titlePanel("US Swing State Election Results"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("year", "Select a year:", 
+                  choices = c(2000, 2004, 2008, 2012, 2016), 
+                  multiple = TRUE, selected = 2000),
+      selectInput("states", "Select a state:", 
+                  choices = unique(swing_elec$state), 
+                  multiple = TRUE, selected = "Arizona"), 
+      p("Based on the data gathered through parallel computing we have created a Shiny app that shows how the composition of Congress in swing states changes based on how that state voted for President. You may be asking why we wanted to understand the specifics of Swing State voting. General elections tend to be a very tight race and can often be dependent on how these Swing States vote. Please Select a year or multiple along with a single swing state or multiple. Based off your selections you will be able to see what trends have emerged over the years and in specfic states. Our app should allow you to gather a better understanding of how swing states can have a major effect in our elections. As a resource here is information on what presidents won and their political party incase you want to compare and see the impact these swing states may have had. https://www.britannica.com/topic/United-States-Presidential-Election-Results-1788863")
+    ),
+    
+    mainPanel(
+      plotOutput("electionPlot")
+    )
+  )
+)
+
+server <- function(input, output) {
+  
+  swing_elec_filtered <- reactive({
+    swing_elec %>% 
+      filter(state %in% input$states, year %in% input$year)
+  })
+  
+  output$electionPlot <- renderPlot({
+    ggplot(data = swing_elec_filtered(), aes(x = year, y = total_votes, fill = party)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      facet_grid(rows = vars(state), cols = vars(office)) +
+      labs(x = "Year", y = "Total Votes", fill = "Party") +
+      scale_fill_manual(values = c("blue", "red")) +
+      theme_bw()
+
+  })
+}
+
+shinyApp(ui, server)
+
+```
+
