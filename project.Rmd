@@ -12,7 +12,7 @@ library(dplyr)
 library(stringr)
 library(ggplot2)
 library(shiny)
-
+library(DT)
 ```
 
 ```{r, include=FALSE}
@@ -369,11 +369,12 @@ ui <- fluidPage(
       selectInput("states", "Select a state:", 
                   choices = unique(swing_elec$state), 
                   multiple = TRUE, selected = "Arizona"), 
-      p("Based on the data gathered through parallel computing we have created a Shiny app that shows how the composition of Congress in swing states changes based on how that state voted for President. You may be asking why we wanted to understand the specifics of Swing State voting. General elections tend to be a very tight race and can often be dependent on how these Swing States vote. Please Select a year or multiple along with a single swing state or multiple. Based off your selections you will be able to see what trends have emerged over the years and in specfic states. Our app should allow you to gather a better understanding of how swing states can have a major effect in our elections. As a resource here is information on what presidents won and their political party incase you want to compare and see the impact these swing states may have had. https://www.britannica.com/topic/United-States-Presidential-Election-Results-1788863")
-    ),
+      p("Based on the data gathered through parallel computing we have created a Shiny app that shows how the composition of Congress in swing states changes based on how that state voted for President. You may be asking why we wanted to understand the specifics of Swing State voting. General elections tend to be a very tight race and can often be dependent on how these Swing States vote. Please select a year or multiple along with a single swing state or multiple. Based on your selections you will be able to see what trends have emerged over the years and in specific states. Our app should allow you to gather a better understanding of how swing states can have a major effect in our elections. As a resource here is information on what presidents won and their political party incase you want to compare and see the impact these swing states may have had. ",
+        a("https://www.britannica.com/topic/United-States-Presidential-Election-Results-1788863", target="_blank"))),
     
     mainPanel(
-      plotOutput("electionPlot")
+      plotOutput("electionPlot"), 
+      dataTableOutput("presTable")
     )
   )
 )
@@ -382,7 +383,7 @@ server <- function(input, output) {
   
   swing_elec_filtered <- reactive({
     swing_elec %>% 
-      filter(state %in% input$states, year %in% input$year)
+      filter(state %in% input$states, year %in% input$year, !is.na(candidate))
   })
   
   output$electionPlot <- renderPlot({
@@ -393,6 +394,14 @@ server <- function(input, output) {
       scale_fill_manual(values = c("blue", "red")) +
       theme_bw()
 
+  })
+  
+  output$presTable <- renderDataTable({
+    swing_elec %>% 
+      filter(year %in% input$year, state %in% input$states, !is.na(candidate)) %>% 
+      select(year, state, candidate, party) %>% 
+      unique() %>%
+      datatable(options = list(pageLength = 10))
   })
 }
 
