@@ -2,12 +2,12 @@
 
 tar -xzf R413.tar.gz
 
-tar -xzf wi.tar
+tasr -xvf packages.tar.gz
 
-tar -xzf mi.tar
+tar -xzf $1
 
-tar -xzf az.tar
+export PATH=$PWD/R/bin:$PATH
+export RHOME=$PWD/R
+export R_LIBS=$PWD/packages
 
-tar -xzf pa.tar
-
-tar -xzf ga.tar
+Rscript test.R
